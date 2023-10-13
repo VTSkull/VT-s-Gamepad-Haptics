@@ -70,13 +70,7 @@ for x in contactBinds:
                 controllerNames.append(joystick.get_name())
                 print(joystick.get_name())
                 break
-    #giving up on seperating joycons for now
-    """
-    if joystick.get_name() == "Nintendo Switch Joy-Con (L/R)":
-        joyConValues.append(0.0)
-        joyConValues.append(0.0)
-        joyConPositions.append(joysticks.index(joystick))
-    """
+
 pg.joystick.Joystick
 
 
