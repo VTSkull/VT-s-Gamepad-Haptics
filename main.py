@@ -37,11 +37,15 @@ contactBindsValues = []
 spacing = 90
 enabled = True
 running = True
-joyConValues = []
-joyConPositions = []
+controllers = []
+controllerNames = []
+#joyConValues = []
+#joyConPositions = []
 
 
+# ---
 #get contact binds
+# ---
 with open("ContactBinds.json","r") as file:
     contactBinds = json.load(file)
     file.close()
@@ -53,16 +57,32 @@ for x in contactBinds:
 contactBindsKeys = list(contactBinds.keys())
 contactBindsValues = list(contactBinds.values())
 
-#get joysticks
-for joystick in joysticks:
+
+# ---
+#get controllers
+# ---
+for x in contactBinds:
+    if contactBinds[x] != None:
+        for joystick in joysticks:   
+            if joystick.get_name() == contactBinds[x]:
+                joysticks.remove(joystick)
+                controllers.append(joystick)
+                controllerNames.append(joystick.get_name())
+                print(joystick.get_name())
+                break
+    #giving up on seperating joycons for now
+    """
     if joystick.get_name() == "Nintendo Switch Joy-Con (L/R)":
         joyConValues.append(0.0)
         joyConValues.append(0.0)
         joyConPositions.append(joysticks.index(joystick))
-    print(joystick.get_name())    
+    """
 pg.joystick.Joystick
 
+
+# ---
 #load images
+# ---
 def load_image(name, colorkey=None, scale=1):
     fullname = os.path.join(data_dir, name)
     image = pg.image.load(fullname)
@@ -77,7 +97,10 @@ def load_image(name, colorkey=None, scale=1):
         image.set_colorkey(colorkey, pg.RLEACCEL)
     return image, image.get_rect()
 
+
+# ---
 #button class
+# ---
 objects = []
 class Button():
     def __init__(self, x, y, width, height, buttonText='Button', onclickFunction=None, onePress=False, args=[], thread=False, joyCon=False, usedJoyCon=None):
@@ -110,8 +133,6 @@ class Button():
             if pg.mouse.get_pressed(num_buttons=3)[0]:
                 self.buttonSurface.fill(self.fillColors['pressed'])
                 if self.onePress:
-                    
-                    #do function
                     if self.thread:
                         if self.argument == None:
                             x = threading.Thread(target=self.onclickFunction, daemon=True)
@@ -125,7 +146,6 @@ class Button():
                             elf.onclickFunction(self.argument)
                             
                 elif not self.alreadyPressed:
-                    #do function
                     if self.thread:
                         if self.argument == None:
                             x = threading.Thread(target=self.onclickFunction, daemon=True)
@@ -148,23 +168,20 @@ class Button():
         ])
         screen.blit(self.buttonSurface, self.buttonRect)
 
-#viberate button function
-def Viberate(controllerNum, joycon, usedJoycon):
-    global contactValues, joyConValues
-    if joycon:
-        joyConValues[usedJoycon] = 0.5
-        contactValues[controllerNum+usedJoycon] = 0.5
-        print("set joycon value")
-        time.sleep(1)
-        joyConValues[usedJoycon] = 0.0
-        contactValues[controllerNum+usedJoycon] = 0.0
-        print(contactValues)
-    else:
-        contactValues[controllerNum] = 0.5
-        time.sleep(1)
-        contactValues[controllerNum] = 0.0
 
+# ---
+#viberate button function
+# ---
+def Viberate(controllerNum, joycon, usedJoycon):
+    global contactValues
+    contactValues[controllerNum] = 0.5
+    time.sleep(1)
+    contactValues[controllerNum] = 0.0
+
+
+# ---
 #toggle haptics function
+# ---
 def ToggleHaptics():
     global enabled
     if enabled:
@@ -172,16 +189,19 @@ def ToggleHaptics():
     else:
         enabled = True
 
+
+# ---
 #set up buttons
-for x in range(len(joysticks)):
-    if joysticks[x].get_name() != "Nintendo Switch Joy-Con (L/R)":
-        Button(50, (spacing*x)+spacing, 300, 35, 'Vibrate', Viberate, args=x, thread=True)
-for x in range(len(joyConPositions)):
-    for y in [0,1]:
-        Button(50, (spacing*(y+(len(joysticks)-1))+spacing), 300, 35, 'vibrate', Viberate, args=joyConPositions[x], joyCon=True, usedJoyCon=y, thread=True)
+# ---
+for x in range(len(controllers)):
+    Button(50, (spacing*x)+spacing, 300, 35, 'Vibrate', Viberate, args=x, thread=True)
+
 Button(201, 1, 198, 35, 'Toggle Haptics', ToggleHaptics, args=None)
-    
+
+
+# ---  
 #OSC receiver thread
+# ---
 def OSC():
     global contactValues
     print("thread started")
@@ -212,7 +232,10 @@ def OSC():
 oscThread = threading.Thread(target=OSC, daemon=True)
 oscThread.start()
 
+
+# ---
 #OSC chatbox setup
+# ---
 chatbox = True
 def ToggleChatbox():
     global chatbox
@@ -238,7 +261,10 @@ def chatbox():
 chatboxThread = threading.Thread(target=chatbox, daemon=True)
 chatboxThread.start()
 
+
+# ---
 #main loop
+# ---
 while running:
 
     #quit the program
@@ -255,38 +281,31 @@ while running:
         object.process()
         
     #for each controller
-    for x in range(len(joysticks)+len(joyConValues)-1):
+    for x in range(len(controllers)):
         if contactValues[x] > 0:
             if enabled:
-                print(joyConValues)
-                if contactBindsValues[x][:2] == "ns":
-                    if joyConValues[0] != 0.0 and joyConValues[1] != 0.0:
-                        joysticks[joyConPositions[0]].rumble(joyConValues[0],joyConValues[1],0)
-                    elif joyConValues[0] != 0.0:
-                        joysticks[joyConPositions[0]].rumble(joyConValues[0],0,0)
-                    elif joyConValues[1] != 0.0:
-                        joysticks[joyConPositions[0]].rumble(0,joyConValues[1],0)
-                    else:
-                        joysticks[joyConPositions[0]].stop_rumble()
-                        
+                if controllers[x].get_name() == "Nintendo Switch Joy-Con (L/R)":
+                    controllers[x].rumble(contactValues[x],contactValues[x],0)
                 else:
-                    joysticks[x].rumble(contactValues[x],0.1,0)
+                    controllers[x].rumble(contactValues[x],0.1,0)   
             else:
-                if joysticks[x].get_name() != "Nintendo Switch Joy-Con (L/R)":
-                    joysticks[x].stop_rumble()
-        #else:
-        #    joysticks[x].stop_rumble()
-        try:
-            if joysticks[x].get_name() == "PS4 Controller":
-                screen.blit(load_image("ps4.png",scale=0.1)[0],(10,(spacing*x)+spacing/2))
-            elif joysticks[x].get_name() == "Nintendo Switch Joy-Con (L)":
-                screen.blit(load_image("Ljoycon.png",scale=0.15)[0],(-8,((spacing*x)+spacing/2)-10))
-            elif joysticks[x].get_name() == "Nintendo Switch Joy-Con (R)":
-                screen.blit(load_image("Rjoycon.png",scale=0.15)[0],(-8,((spacing*x)+spacing/2)-10))
-            elif joysticks[x].get_name() == "Nintendo Switch Joy-Con (L/R)":
-                screen.blit(load_image("Ljoycon.png",scale=0.15)[0],(-8,((spacing*x)+spacing/2)-10))
-        except:
+                controllers[x].stop_rumble()        
+        else:
+            controllers[x].stop_rumble()
+
+
+        if controllers[x].get_name() == "PS4 Controller":
+            screen.blit(load_image("ps4.png",scale=0.1)[0],(10,(spacing*x)+spacing/2))
+        elif controllers[x].get_name() == "Nintendo Switch Joy-Con (L)":
+            screen.blit(load_image("Ljoycon.png",scale=0.15)[0],(-8,((spacing*x)+spacing/2)-10))
+        elif controllers[x].get_name() == "Nintendo Switch Joy-Con (R)":
             screen.blit(load_image("Rjoycon.png",scale=0.15)[0],(-8,((spacing*x)+spacing/2)-10))
+        elif controllers[x].get_name() == "Nintendo Switch Joy-Con (L/R)":
+            screen.blit(load_image("Ljoycon.png",scale=0.15)[0],(-15,((spacing*x)+spacing/2)-10))
+            screen.blit(load_image("Rjoycon.png",scale=0.15)[0],(5,((spacing*x)+spacing/2)-10))
+        elif controllers[x].get_name() == "Xbox One S Controller":
+            screen.blit(load_image("xbox.png",scale=0.12)[0],(5,((spacing*x)+spacing/2)-10))
+
         #display the info
         text = font.render(str(contactValues[x]), True, "black")
         screen.blit(text,(80,((spacing*x)+20)+spacing/2))
@@ -295,6 +314,6 @@ while running:
 
 
     pg.display.flip()
-    clock.tick(60)  # limits FPS to 60
+    clock.tick(30)  # limits FPS to 30
 
 pg.quit()

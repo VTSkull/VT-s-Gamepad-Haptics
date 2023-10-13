@@ -1,8 +1,8 @@
 {
-"ChestHapticGeneral":0,
-"TummyHapticGeneral":1,
-"LeftThighHapticGeneral":"ns0",
-"RightThighHapticGeneral":"ns1",
+"ChestHapticGeneral":"Nintendo Switch Joy-Con (L/R)",
+"TummyHapticGeneral":"Xbox One S Controller",
+"LeftThighHapticGeneral":"PS4 Controller",
+"RightThighHapticGeneral":"PS4 Controller",
 "LeftChestHaptic":null,
 "RightChestHaptic":null,
 "CenterChestHaptic":null,
