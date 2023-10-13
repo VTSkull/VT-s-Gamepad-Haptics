@@ -1,0 +1,16 @@
+LeftChestHaptic
+RightChestHaptic
+CenterChestHaptic
+ChestHapticGeneral
+LeftTummyHaptic
+RightTummyHaptic
+CenterTummyHaptic
+TummyHapticGeneral
+LeftLeftThighHaptic
+RightLeftThighHaptic
+CenterLeftThighHaptic
+LeftThighHapticGeneral
+LeftRightThighHaptic
+RightRightThighHaptic
+CenterRightThighHaptic
+RightThighHapticGeneral
