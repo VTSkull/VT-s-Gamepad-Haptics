@@ -39,10 +39,10 @@ contactBindsValues = []
 spacing = 90
 enabled = True
 running = True
+updateDrp = False
 controllers = []
 controllerNames = []
-#joyConValues = []
-#joyConPositions = []
+controllerBinds = []
 
 
 # ---
@@ -70,7 +70,8 @@ for x in contactBinds:
                 joysticks.remove(joystick)
                 controllers.append(joystick)
                 controllerNames.append(joystick.get_name())
-                print(joystick.get_name())
+                controllerBinds.append(x)
+                print(x)
                 break
 
 pg.joystick.Joystick
@@ -179,7 +180,8 @@ def Viberate(controllerNum, joycon, usedJoycon):
 #toggle haptics function
 # ---
 def ToggleHaptics():
-    global enabled
+    global enabled, updateDrp
+    updateDrp = True
     if enabled:
         enabled = False
     else:
@@ -261,24 +263,30 @@ chatboxThread.start()
 # ---
 #discord rich presence
 # ---
-def drpc():
+def drp():
+    global updateDrp
     client_id = "1162550265409441802"
     with Presence(client_id) as presence:
         print("Connected")
         startTime = int(time.time())
         presence.set({})
         while True:
-            presence.set(
-                {
-                    "state": f"enabled: {enabled}",
-                    "details": f"{len(controllers)} devices connected",
-                    "timestamps": {"start": startTime}
-                }
-            )
-            print("Presence updated")
-            time.sleep(5)
-drpcThread = threading.Thread(target=drpc, daemon=True)
-drpcThread.start()
+            if updateDrp:
+                presence.set(
+                    {
+                        "state": f"enabled: {enabled}",
+                        "details": f"{len(controllers)} devices connected",
+                        "timestamps": {"start": startTime}
+                    }
+                )
+                print("Presence updated")
+                updateDrp = False
+            time.sleep(0.1)
+
+drpThread = threading.Thread(target=drp, daemon=True)
+drpThread.start()
+updateDrp = True
+
 
 # ---
 #main loop
@@ -327,7 +335,7 @@ while running:
         #display the info
         text = font.render(str(contactValues[x]), True, "black")
         screen.blit(text,(80,((spacing*x)+20)+spacing/2))
-        text = font.render(str(contactBindsKeys[x]), True, "black")
+        text = font.render(str(controllerBinds[x]), True, "black")
         screen.blit(text,(70,(spacing*x)+spacing/2))
 
 
