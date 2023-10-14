@@ -2,6 +2,8 @@ import os,json,threading,time
 os.environ['SDL_JOYSTICK_HIDAPI_PS4_RUMBLE'] = '1'
 import pygame as pg
 from typing import List, Any
+from discordrp import Presence
+
 os.system('cls')
 #initialize pygame
 pg.init()
@@ -255,6 +257,28 @@ def chatbox():
 chatboxThread = threading.Thread(target=chatbox, daemon=True)
 chatboxThread.start()
 
+
+# ---
+#discord rich presence
+# ---
+def drpc():
+    client_id = "1162550265409441802"
+    with Presence(client_id) as presence:
+        print("Connected")
+        startTime = int(time.time())
+        presence.set({})
+        while True:
+            presence.set(
+                {
+                    "state": f"enabled: {enabled}",
+                    "details": f"{len(controllers)} devices connected",
+                    "timestamps": {"start": startTime}
+                }
+            )
+            print("Presence updated")
+            time.sleep(5)
+drpcThread = threading.Thread(target=drpc, daemon=True)
+drpcThread.start()
 
 # ---
 #main loop
